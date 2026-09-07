@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rash - Kajue PWA</title>
-    <!-- Firebase App (Core) SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <!-- Firebase Realtime Database SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- PeerJS for direct device-to-device communication -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     
     <style>
         * { box-sizing: border-box; }
@@ -25,7 +23,7 @@
         .app-header {
             background: #202c33;
             padding: 10px 16px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             border-bottom: 1px solid #2a3942;
             display: flex;
@@ -35,17 +33,45 @@
         }
         .header-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         .header-actions button {
             background: #00a884;
             border: none;
             color: #fff;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
+        }
+        .connection-bar {
+            background: #0b141a;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-bottom: 1px solid #2a3942;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .connection-bar input {
+            background: #2a3942;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+            flex: 1;
+        }
+        .connection-bar button {
+            background: #00a884;
+            border: none;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
         }
         .main-container {
             flex: 1;
@@ -70,6 +96,9 @@
         .user-row {
             justify-content: flex-end;
         }
+        .peer-row {
+            justify-content: flex-start;
+        }
         .message-bubble {
             max-width: 75%;
             background: #005c4b;
@@ -78,6 +107,10 @@
             position: relative;
             box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
             word-break: break-word;
+        }
+        .peer-row .message-bubble {
+            background: #202c33;
+            border-radius: 0 8px 8px 8px;
         }
         .message-bubble img {
             width: 100%;
@@ -192,9 +225,15 @@
     <div class="app-header">
         <span id="appTitle">Rash Chat</span>
         <div class="header-actions">
-            <button onclick="startCall()">📞 Call</button>
             <button onclick="toggleSettings()">⚙️ Settings</button>
         </div>
+    </div>
+
+    <!-- Direct Connection Bar -->
+    <div class="connection-bar">
+        <span id="myIdDisplay" style="font-size: 10px; color: #b9ec0c;">Connecting...</span>
+        <input type="text" id="peerIdInput" placeholder="Enter friend's ID">
+        <button onclick="connectToPeer()">Connect</button>
     </div>
 
     <div class="main-container">
@@ -234,50 +273,51 @@
     </div>
 
     <script>
-        // TODO: Replace with your own Firebase project configuration keys
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        let peer = new Peer();
+        let conn = null;
+        const chatBox = id("chatBox");
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const dbRef = firebase.database().ref('messages');
-
-        const chatBox = document.getElementById("chatBox");
-
-        // Listen for live messages incoming from any device
-        dbRef.on('child_added', (snapshot) => {
-            let msg = snapshot.val();
-            let msgKey = snapshot.key;
-            appendMessageToUI(msg, msgKey);
+        peer.on('open', (idValue) => {
+            id("myIdDisplay").innerText = "My ID: " + idValue;
         });
 
-        // Listen for deleted messages across devices
-        dbRef.on('child_removed', (snapshot) => {
-            let msgKey = snapshot.key;
-            let element = document.getElementById("msg-" + msgKey);
-            if (element) element.remove();
+        peer.on('connection', (incomingConn) => {
+            conn = incomingConn;
+            setupConnection();
+            alert("Device connected!");
         });
+
+        function connectToPeer() {
+            let friendId = id("peerIdInput").value.trim();
+            if (!friendId) return;
+            conn = peer.connect(friendId);
+            setupConnection();
+            alert("Connecting to device...");
+        }
+
+        function setupConnection() {
+            conn.on('data', (data) => {
+                if (data.action === 'send') {
+                    appendMessageToUI(data.msg, 'peer');
+                } else if (data.action === 'delete') {
+                    let el = id("msg-" + data.key);
+                    if (el) el.remove();
+                }
+            });
+        }
 
         function sendMessage() {
-            let input = document.getElementById("messageInput");
-            let text = input.value.trim();
+            let text = id("messageInput").value.trim();
             if (!text) return;
-
-            // Push to Firebase database instead of local array
-            dbRef.push({
-                type: 'text',
-                content: text,
-                timestamp: Date.now()
-            });
-
-            input.value = "";
+            let msgData = { type: 'text', content: text };
+            let key = 'msg_' + Date.now();
+            
+            appendMessageToUI(msgData, 'user', key);
+            
+            if (conn && conn.open) {
+                conn.send({ action: 'send', msg: msgData, key: key });
+            }
+            id("messageInput").value = "";
         }
 
         function handleFile(event) {
@@ -285,27 +325,29 @@
             if (file) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    dbRef.push({
-                        type: 'image',
-                        content: e.target.result,
-                        timestamp: Date.now()
-                    });
+                    let msgData = { type: 'image', content: e.target.result };
+                    let key = 'msg_' + Date.now();
+                    appendMessageToUI(msgData, 'user', key);
+                    if (conn && conn.open) {
+                        conn.send({ action: 'send', msg: msgData, key: key });
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         }
 
         function sendVoiceNote() {
-            dbRef.push({
-                type: 'audio',
-                content: 'https://www.w3schools.com/html/horse.mp3',
-                timestamp: Date.now()
-            });
+            let msgData = { type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' };
+            let key = 'msg_' + Date.now();
+            appendMessageToUI(msgData, 'user', key);
+            if (conn && conn.open) {
+                conn.send({ action: 'send', msg: msgData, key: key });
+            }
         }
 
-        function appendMessageToUI(msg, key) {
+        function appendMessageToUI(msg, senderType, key = 'key_' + Math.random()) {
             let row = document.createElement("div");
-            row.className = "message-row user-row";
+            row.className = "message-row " + (senderType === 'user' ? 'user-row' : 'peer-row');
             row.id = "msg-" + key;
             
             let bubble = document.createElement("div");
@@ -326,44 +368,38 @@
                 bubble.appendChild(text);
             }
 
-            let delBtn = document.createElement("button");
-            delBtn.className = "delete-btn";
-            delBtn.innerHTML = "✕";
-            delBtn.onclick = () => deleteMessage(key);
-            bubble.appendChild(delBtn);
+            if (senderType === 'user') {
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-btn";
+                delBtn.innerHTML = "✕";
+                delBtn.onclick = () => {
+                    row.remove();
+                    if (conn && conn.open) conn.send({ action: 'delete', key: key });
+                };
+                bubble.appendChild(delBtn);
+            }
 
             row.appendChild(bubble);
             chatBox.appendChild(row);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function deleteMessage(key) {
-            // Removes message globally from Firebase database
-            firebase.database().ref('messages/' + key).remove();
-        }
-
-        function triggerUpload() {
-            document.getElementById("fileInput").click();
-        }
-
-        function startCall() {
-            alert("Connecting audio call...");
+        function id(elementId) {
+            return document.getElementById(elementId);
         }
 
         function toggleSettings() {
-            let modal = document.getElementById("settingsModal");
+            let modal = id("settingsModal");
             modal.style.display = modal.style.display === "block" ? "none" : "block";
         }
 
         function saveSettings() {
-            let newName = document.getElementById("setNameInput").value;
-            let newColor = document.getElementById("setThemeColor").value;
-            
-            document.getElementById("appTitle").innerText = newName + " Chat";
+            let newName = id("setNameInput").value;
+            let newColor = id("setThemeColor").value;
+            id("appTitle").innerText = newName + " Chat";
             document.querySelectorAll(".chat-input-area button, .header-actions button").forEach(btn => {
                 btn.style.background = newColor;
             });
-            
             toggleSettings();
         }
     </script>
