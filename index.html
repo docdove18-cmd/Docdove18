@@ -1,330 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rash - Kajue PWA</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            background: #121b22;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e9edef;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-        }
-        .app-header {
-            background: #202c33;
-            padding: 12px 16px;
-            font-size: 18px;
-            font-weight: bold;
-            border-bottom: 1px solid #2a3942;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .header-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .header-actions button {
-            background: #00a884;
-            border: none;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: #0b141a;
-            position: relative;
-        }
-        .chat-container {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .message-row {
-            display: flex;
-            width: 100%;
-            justify-content: flex-end;
-        }
-        .message-bubble {
-            max-width: 75%;
-            background: #005c4b;
-            padding: 8px 12px;
-            border-radius: 8px 0 8px 8px;
-            position: relative;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
-            word-break: break-word;
-        }
-        .message-bubble img {
-            width: 100%;
-            border-radius: 6px;
-            margin-bottom: 4px;
-        }
-        .delete-btn {
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            background: rgba(0,0,0,0.5);
-            border: none;
-            color: #fff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .media-bar {
-            background: #202c33;
-            padding: 8px 12px;
-            display: flex;
-            gap: 8px;
-            border-top: 1px solid #2a3942;
-            overflow-x: auto;
-            flex-shrink: 0;
-        }
-        .media-btn {
-            background: #2a3942;
-            border: none;
-            color: #e9edef;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .chat-input-area {
-            background: #202c33;
-            padding: 10px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .chat-input-area input {
-            flex: 1;
-            background: #2a3942;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            color: #fff;
-            outline: none;
-            font-size: 14px;
-        }
-        .chat-input-area button {
-            background: #00a884;
-            border: none;
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #settingsModal {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #121b22;
-            z-index: 50;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-        .settings-header {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2a3942;
-            padding-bottom: 10px;
-        }
-        .settings-group {
-            margin-bottom: 16px;
-        }
-        .settings-group label {
-            display: block;
-            font-size: 13px;
-            color: #00a884;
-            margin-bottom: 6px;
-        }
-        .settings-group input, .settings-group select {
-            width: 100%;
-            background: #2a3942;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            color: #fff;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docdove18 | Live Chat & Direct Calls</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; text-align: center; }
+    #chat-box { width: 100%; max-width: 500px; height: 280px; border: 1px solid #ccc; background: #fff; margin: 15px auto; overflow-y: scroll; padding: 10px; text-align: left; }
+    .input-area { display: flex; flex-direction: column; gap: 8px; max-width: 500px; margin: 0 auto; }
+    .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    input[type="text"] { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+    button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1; }
+    button.call-btn { background: #28a745; font-weight: bold; }
+    button.recording { background: #dc3545; }
+    .file-input { display: none; }
+    label.btn-label { padding: 10px; background: #17a2b8; color: white; border-radius: 4px; cursor: pointer; flex: 1; text-align: center; font-size: 14px; }
+    #video-container { display: flex; justify-content: center; gap: 10px; margin: 10px auto; max-width: 500px; }
+    video { width: 48%; background: #000; border-radius: 6px; display: none; }
+    #status { font-size: 13px; color: #555; margin-bottom: 5px; }
+  </style>
 </head>
 <body>
 
-    <div class="app-header">
-        <span id="appTitle">Rash Chat</span>
-        <div class="header-actions">
-            <button onclick="startCall()">📞 Call</button>
-            <button onclick="toggleSettings()">⚙️ Settings</button>
-        </div>
+  <h2>Docdove18 Live Community Chat</h2>
+  <div id="status">Connecting to call server...</div>
+  
+  <div id="video-container">
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+  </div>
+
+  <div id="chat-box">
+    <p><i>Messages will appear here...</i></p>
+  </div>
+
+  <div class="input-area">
+    <div class="btn-group">
+      <button class="call-btn" onclick="startCall()">📞 Call Active User</button>
+      <button id="recordBtn" type="button" onclick="toggleRecording()">🎙️ Voice</button>
     </div>
 
-    <div class="main-container">
-        <div class="chat-container" id="chatBox"></div>
+    <div class="btn-group">
+      <label for="cameraInput" class="btn-label">📷 Camera Photo</label>
+      <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="environment">
 
-        <div class="media-bar">
-            <button class="media-btn" onclick="triggerUpload()">📷 Camera / Gallery</button>
-            <button class="media-btn" onclick="sendVoiceNote()">🎤 Voice Note</button>
-            <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleFile(event)">
-        </div>
-
-        <div class="chat-input-area">
-            <input type="text" id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-
-        <div id="settingsModal">
-            <div class="settings-header">
-                <span>App Settings</span>
-                <button onclick="toggleSettings()" style="background:#2a3942; border:none; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer;">Close</button>
-            </div>
-            <div class="settings-group">
-                <label>Profile Name</label>
-                <input type="text" id="setNameInput" value="Rash">
-            </div>
-            <div class="settings-group">
-                <label>Theme Accent Color</label>
-                <select id="setThemeColor">
-                    <option value="#00a884">WhatsApp Green</option>
-                    <option value="#b9ec0c">Lime Accent</option>
-                    <option value="#14e453">Neon Green</option>
-                </select>
-            </div>
-            <button onclick="saveSettings()" style="width:100%; background:#00a884; border:none; color:#fff; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Save Changes</button>
-        </div>
+      <label for="imageInput" class="btn-label">📁 Gallery</label>
+      <input type="file" id="imageInput" class="file-input" accept="image/*">
     </div>
 
-    <script>
-        const chatBox = document.getElementById("chatBox");
-        let messages = JSON.parse(localStorage.getItem('rash_chats')) || [];
-        renderChat();
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send Message</button>
+  </div>
 
-        function renderChat() {
-            chatBox.innerHTML = "";
-            messages.forEach((msg, index) => {
-                let row = document.createElement("div");
-                row.className = "message-row";
-                
-                let bubble = document.createElement("div");
-                bubble.className = "message-bubble";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-                if (msg.type === 'image') {
-                    let img = document.createElement("img");
-                    img.src = msg.content;
-                    bubble.appendChild(img);
-                } else if (msg.type === 'audio') {
-                    let audio = document.createElement("audio");
-                    audio.controls = true;
-                    audio.src = msg.content;
-                    bubble.appendChild(audio);
-                } else {
-                    let text = document.createElement("div");
-                    text.innerText = msg.content;
-                    bubble.appendChild(text);
-                }
+    const firebaseConfig = {
+      apiKey: "AIzaSyD_M7Xg6TAIxHB3Vvp1",
+      authDomain: "rash-kajue-chat.firebaseapp.com",
+      projectId: "rash-kajue-chat",
+      storageBucket: "rash-kajue-chat.firebasestorage.app",
+      messagingSenderId: "859601059111",
+      appId: "1:859601059111:web:c4ea50"
+    };
 
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-btn";
-                delBtn.innerHTML = "✕";
-                delBtn.onclick = () => deleteMessage(index);
-                bubble.appendChild(delBtn);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-                row.appendChild(bubble);
-                chatBox.appendChild(row);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
+    const peer = new Peer();
+    let myPeerId = "";
+    let targetPeerId = "";
+
+    // Register active ID automatically to Firestore
+    peer.on('open', async (id) => {
+      myPeerId = id;
+      document.getElementById("status").innerText = "Ready for calls! ID registered.";
+      await setDoc(doc(db, "online_users", "latest_user"), {
+        peerId: id,
+        timestamp: new Date()
+      });
+    });
+
+    // Listen for incoming calls
+    peer.on('call', async (call) => {
+      if (confirm("Incoming Call! Tap OK to accept.")) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById("localVideo").style.display = "block";
+        document.getElementById("remoteVideo").style.display = "block";
+        document.getElementById("localVideo").srcObject = stream;
+        
+        call.answer(stream);
+        call.on('stream', (remoteStream) => {
+          document.getElementById("remoteVideo").srcObject = remoteStream;
+        });
+      }
+    });
+
+    // Listen for target call partner automatically
+    onSnapshot(doc(db, "online_users", "latest_user"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.peerId !== myPeerId) {
+          targetPeerId = data.peerId;
+          document.getElementById("status").innerText = "Another user is online! Tap Call Active User.";
         }
+      }
+    });
 
-        function sendMessage() {
-            let input = document.getElementById("messageInput");
-            let text = input.value.trim();
-            if (!text) return;
-            messages.push({ type: 'text', content: text });
-            localStorage.setItem('rash_chats', JSON.stringify(messages));
-            input.value = "";
-            renderChat();
-        }
+    window.startCall = async function() {
+      if (!targetPeerId) {
+        alert("No other active user detected on the site right now. Open the site on a second device first!");
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById("localVideo").style.display = "block";
+        document.getElementById("remoteVideo").style.display = "block";
+        document.getElementById("localVideo").srcObject = stream;
 
-        function deleteMessage(index) {
-            messages.splice(index, 1);
-            localStorage.setItem('rash_chats', JSON.stringify(messages));
-            renderChat();
-        }
+        const call = peer.call(targetPeerId, stream);
+        call.on('stream', (remoteStream) => {
+          document.getElementById("remoteVideo").srcObject = remoteStream;
+        });
+      } catch (e) {
+        alert("Camera/Microphone permission required for calls.");
+      }
+    };
 
-        function triggerUpload() {
-            document.getElementById("fileInput").click();
-        }
+    const fileToBase64 = file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
 
-        function handleFile(event) {
-            let file = event.target.files[0];
-            if (file) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    messages.push({ type: 'image', content: e.target.result });
-                    localStorage.setItem('rash_chats', JSON.stringify(messages));
-                    renderChat();
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+    let mediaRecorder;
+    let audioChunks = [];
+    let base64Audio = "";
 
-        function sendVoiceNote() {
-            messages.push({ type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' });
-            localStorage.setItem('rash_chats', JSON.stringify(messages));
-            renderChat();
+    window.toggleRecording = async function() {
+      const btn = document.getElementById("recordBtn");
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            base64Audio = await fileToBase64(audioBlob);
+          };
+          mediaRecorder.start();
+          btn.innerText = "🛑 Stop";
+          btn.classList.add("recording");
+        } catch (err) {
+          alert("Microphone required.");
         }
+      } else {
+        mediaRecorder.stop();
+        btn.innerText = "🎙️ Ready";
+        btn.classList.remove("recording");
+      }
+    };
 
-        function startCall() {
-            alert("Connecting audio call simulation...");
-        }
+    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+    onSnapshot(q, (snapshot) => {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const msgDiv = document.createElement("div");
+        msgDiv.style.marginBottom = "10px";
+        let content = `<p style="margin:2px 0;"><b>User:</b> ${data.text || ''}</p>`;
+        if (data.imageBase64) content += `<img src="${data.imageBase64}" style="max-width:200px;"><br>`;
+        if (data.audioBase64) content += `<audio controls src="${data.audioBase64}"></audio><br>`;
+        msgDiv.innerHTML = content;
+        chatBox.appendChild(msgDiv);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-        function toggleSettings() {
-            let modal = document.getElementById("settingsModal");
-            modal.style.display = modal.style.display === "block" ? "none" : "block";
-        }
+    window.sendMessage = async function() {
+      const text = document.getElementById("messageInput").value;
+      const cameraFile = document.getElementById("cameraInput").files[0];
+      const galleryFile = document.getElementById("imageInput").files[0];
+      const selectedFile = cameraFile || galleryFile;
 
-        function saveSettings() {
-            let newName = document.getElementById("setNameInput").value;
-            let newColor = document.getElementById("setThemeColor").value;
-            
-            document.getElementById("appTitle").innerText = newName + " Chat";
-            document.querySelectorAll(".chat-input-area button, .header-actions button").forEach(btn => {
-                btn.style.background = newColor;
-            });
-            
-            toggleSettings();
-        }
-    </script>
+      let imageBase64 = "";
+      if (selectedFile) imageBase64 = await fileToBase64(selectedFile);
+
+      if (text || imageBase64 || base64Audio) {
+        await addDoc(collection(db, "messages"), {
+          text: text,
+          imageBase64: imageBase64,
+          audioBase64: base64Audio,
+          timestamp: new Date()
+        });
+
+        document.getElementById("messageInput").value = "";
+        document.getElementById("cameraInput").value = "";
+        document.getElementById("imageInput").value = "";
+        base64Audio = "";
+        document.getElementById("recordBtn").innerText = "🎙️ Voice";
+      }
+    }
+  </script>
 </body>
-    </html>
-    
+</html>
