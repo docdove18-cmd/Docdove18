@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Docdove18 Chat",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Docdove18",
+  "start_url": "/",
+  "theme_color": "#007bff",
+  "id": "/"
+}
