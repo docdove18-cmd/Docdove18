@@ -1,4 +1,5 @@
-"background_color": "#14e453",
+{
+  "background_color": "#14e453",
   "dir": "ltr",
   "display": "standalone",
   "name": "Rash",
@@ -9,4 +10,4 @@
   "theme_color": "#b9ec0c",
   "id": "/",
   "description": "A live community chat app with video calls and media sharing"
-{
+}
