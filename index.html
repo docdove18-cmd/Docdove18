@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rash - Kajue PWA</title>
-    <!-- PeerJS for direct device-to-device communication -->
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    
     <style>
         * { box-sizing: border-box; }
         body {
@@ -22,8 +19,8 @@
         }
         .app-header {
             background: #202c33;
-            padding: 10px 16px;
-            font-size: 16px;
+            padding: 12px 16px;
+            font-size: 18px;
             font-weight: bold;
             border-bottom: 1px solid #2a3942;
             display: flex;
@@ -33,45 +30,17 @@
         }
         .header-actions {
             display: flex;
-            gap: 6px;
+            gap: 8px;
         }
         .header-actions button {
             background: #00a884;
             border: none;
             color: #fff;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        .connection-bar {
-            background: #0b141a;
-            padding: 6px 12px;
             font-size: 12px;
-            border-bottom: 1px solid #2a3942;
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .connection-bar input {
-            background: #2a3942;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 11px;
-            flex: 1;
-        }
-        .connection-bar button {
-            background: #00a884;
-            border: none;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
+            font-weight: bold;
         }
         .main-container {
             flex: 1;
@@ -92,12 +61,7 @@
         .message-row {
             display: flex;
             width: 100%;
-        }
-        .user-row {
             justify-content: flex-end;
-        }
-        .peer-row {
-            justify-content: flex-start;
         }
         .message-bubble {
             max-width: 75%;
@@ -107,10 +71,6 @@
             position: relative;
             box-shadow: 0 1px 0.5px rgba(0,0,0,0.3);
             word-break: break-word;
-        }
-        .peer-row .message-bubble {
-            background: #202c33;
-            border-radius: 0 8px 8px 8px;
         }
         .message-bubble img {
             width: 100%;
@@ -154,7 +114,7 @@
         }
         .chat-input-area {
             background: #202c33;
-            padding: 8px 10px;
+            padding: 10px;
             display: flex;
             gap: 8px;
             align-items: center;
@@ -179,7 +139,6 @@
             font-weight: bold;
             cursor: pointer;
         }
-        /* Settings Modal Panel */
         #settingsModal {
             display: none;
             position: absolute;
@@ -225,15 +184,9 @@
     <div class="app-header">
         <span id="appTitle">Rash Chat</span>
         <div class="header-actions">
+            <button onclick="startCall()">📞 Call</button>
             <button onclick="toggleSettings()">⚙️ Settings</button>
         </div>
-    </div>
-
-    <!-- Direct Connection Bar -->
-    <div class="connection-bar">
-        <span id="myIdDisplay" style="font-size: 10px; color: #b9ec0c;">Connecting...</span>
-        <input type="text" id="peerIdInput" placeholder="Enter friend's ID">
-        <button onclick="connectToPeer()">Connect</button>
     </div>
 
     <div class="main-container">
@@ -250,7 +203,6 @@
             <button onclick="sendMessage()">Send</button>
         </div>
 
-        <!-- Settings Modal View -->
         <div id="settingsModal">
             <div class="settings-header">
                 <span>App Settings</span>
@@ -273,51 +225,64 @@
     </div>
 
     <script>
-        let peer = new Peer();
-        let conn = null;
-        const chatBox = id("chatBox");
+        const chatBox = document.getElementById("chatBox");
+        let messages = JSON.parse(localStorage.getItem('rash_chats')) || [];
+        renderChat();
 
-        peer.on('open', (idValue) => {
-            id("myIdDisplay").innerText = "My ID: " + idValue;
-        });
+        function renderChat() {
+            chatBox.innerHTML = "";
+            messages.forEach((msg, index) => {
+                let row = document.createElement("div");
+                row.className = "message-row";
+                
+                let bubble = document.createElement("div");
+                bubble.className = "message-bubble";
 
-        peer.on('connection', (incomingConn) => {
-            conn = incomingConn;
-            setupConnection();
-            alert("Device connected!");
-        });
-
-        function connectToPeer() {
-            let friendId = id("peerIdInput").value.trim();
-            if (!friendId) return;
-            conn = peer.connect(friendId);
-            setupConnection();
-            alert("Connecting to device...");
-        }
-
-        function setupConnection() {
-            conn.on('data', (data) => {
-                if (data.action === 'send') {
-                    appendMessageToUI(data.msg, 'peer');
-                } else if (data.action === 'delete') {
-                    let el = id("msg-" + data.key);
-                    if (el) el.remove();
+                if (msg.type === 'image') {
+                    let img = document.createElement("img");
+                    img.src = msg.content;
+                    bubble.appendChild(img);
+                } else if (msg.type === 'audio') {
+                    let audio = document.createElement("audio");
+                    audio.controls = true;
+                    audio.src = msg.content;
+                    bubble.appendChild(audio);
+                } else {
+                    let text = document.createElement("div");
+                    text.innerText = msg.content;
+                    bubble.appendChild(text);
                 }
+
+                let delBtn = document.createElement("button");
+                delBtn.className = "delete-btn";
+                delBtn.innerHTML = "✕";
+                delBtn.onclick = () => deleteMessage(index);
+                bubble.appendChild(delBtn);
+
+                row.appendChild(bubble);
+                chatBox.appendChild(row);
             });
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function sendMessage() {
-            let text = id("messageInput").value.trim();
+            let input = document.getElementById("messageInput");
+            let text = input.value.trim();
             if (!text) return;
-            let msgData = { type: 'text', content: text };
-            let key = 'msg_' + Date.now();
-            
-            appendMessageToUI(msgData, 'user', key);
-            
-            if (conn && conn.open) {
-                conn.send({ action: 'send', msg: msgData, key: key });
-            }
-            id("messageInput").value = "";
+            messages.push({ type: 'text', content: text });
+            localStorage.setItem('rash_chats', JSON.stringify(messages));
+            input.value = "";
+            renderChat();
+        }
+
+        function deleteMessage(index) {
+            messages.splice(index, 1);
+            localStorage.setItem('rash_chats', JSON.stringify(messages));
+            renderChat();
+        }
+
+        function triggerUpload() {
+            document.getElementById("fileInput").click();
         }
 
         function handleFile(event) {
@@ -325,83 +290,41 @@
             if (file) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    let msgData = { type: 'image', content: e.target.result };
-                    let key = 'msg_' + Date.now();
-                    appendMessageToUI(msgData, 'user', key);
-                    if (conn && conn.open) {
-                        conn.send({ action: 'send', msg: msgData, key: key });
-                    }
+                    messages.push({ type: 'image', content: e.target.result });
+                    localStorage.setItem('rash_chats', JSON.stringify(messages));
+                    renderChat();
                 };
                 reader.readAsDataURL(file);
             }
         }
 
         function sendVoiceNote() {
-            let msgData = { type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' };
-            let key = 'msg_' + Date.now();
-            appendMessageToUI(msgData, 'user', key);
-            if (conn && conn.open) {
-                conn.send({ action: 'send', msg: msgData, key: key });
-            }
+            messages.push({ type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' });
+            localStorage.setItem('rash_chats', JSON.stringify(messages));
+            renderChat();
         }
 
-        function appendMessageToUI(msg, senderType, key = 'key_' + Math.random()) {
-            let row = document.createElement("div");
-            row.className = "message-row " + (senderType === 'user' ? 'user-row' : 'peer-row');
-            row.id = "msg-" + key;
-            
-            let bubble = document.createElement("div");
-            bubble.className = "message-bubble";
-
-            if (msg.type === 'image') {
-                let img = document.createElement("img");
-                img.src = msg.content;
-                bubble.appendChild(img);
-            } else if (msg.type === 'audio') {
-                let audio = document.createElement("audio");
-                audio.controls = true;
-                audio.src = msg.content;
-                bubble.appendChild(audio);
-            } else {
-                let text = document.createElement("div");
-                text.innerText = msg.content;
-                bubble.appendChild(text);
-            }
-
-            if (senderType === 'user') {
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-btn";
-                delBtn.innerHTML = "✕";
-                delBtn.onclick = () => {
-                    row.remove();
-                    if (conn && conn.open) conn.send({ action: 'delete', key: key });
-                };
-                bubble.appendChild(delBtn);
-            }
-
-            row.appendChild(bubble);
-            chatBox.appendChild(row);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function id(elementId) {
-            return document.getElementById(elementId);
+        function startCall() {
+            alert("Connecting audio call simulation...");
         }
 
         function toggleSettings() {
-            let modal = id("settingsModal");
+            let modal = document.getElementById("settingsModal");
             modal.style.display = modal.style.display === "block" ? "none" : "block";
         }
 
         function saveSettings() {
-            let newName = id("setNameInput").value;
-            let newColor = id("setThemeColor").value;
-            id("appTitle").innerText = newName + " Chat";
+            let newName = document.getElementById("setNameInput").value;
+            let newColor = document.getElementById("setThemeColor").value;
+            
+            document.getElementById("appTitle").innerText = newName + " Chat";
             document.querySelectorAll(".chat-input-area button, .header-actions button").forEach(btn => {
                 btn.style.background = newColor;
             });
+            
             toggleSettings();
         }
     </script>
 </body>
-</html>
+    </html>
+    
