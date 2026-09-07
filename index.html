@@ -1,27 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First Website</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        h1 {
-            color: #007bff;
-        }
-        p {
-            font-size: 18px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docdove18 | Live Chat & Share</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; text-align: center; }
+    #chat-box { width: 100%; max-width: 500px; height: 300px; border: 1px solid #ccc; background: #fff; margin: 20px auto; overflow-y: scroll; padding: 10px; text-align: left; }
+    .input-area { display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
+    input[type="text"] { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
 </head>
 <body>
-    <h1>Welcome to My Website!</h1>
-    <p>This page dey hosted live for free using GitHub Pages.</p>
+
+  <h2>Docdove18 Live Community Chat</h2>
+  
+  <div id="chat-box">
+    <p><i>Messages will appear here...</i></p>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="sendMessage()">Send Message</button>
+  </div>
+
+  <!-- Include Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+    // PASTE YOUR FIREBASE CONFIG HERE
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Listen for live messages
+    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+    onSnapshot(q, (snapshot) => {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const msgDiv = document.createElement("div");
+        msgDiv.style.marginBottom = "10px";
+        
+        let content = `<p><b>User:</b> ${data.text || ''}</p>`;
+        if (data.imageUrl) {
+          content += `<img src="${data.imageUrl}" style="max-width:200px; border-radius:5px;"><br>`;
+        }
+        msgDiv.innerHTML = content;
+        chatBox.appendChild(msgDiv);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Send function
+    window.sendMessage = async function() {
+      const text = document.getElementById("messageInput").value;
+      const fileInput = document.getElementById("imageInput").files[0];
+      let imageUrl = "";
+
+      if (fileInput) {
+        const storageRef = ref(storage, 'chat_images/' + fileInput.name);
+        await uploadBytes(storageRef, fileInput);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      if (text || imageUrl) {
+        await addDoc(collection(db, "messages"), {
+          text: text,
+          imageUrl: imageUrl,
+          timestamp: new Date()
+        });
+        document.getElementById("messageInput").value = "";
+        document.getElementById("imageInput").value = "";
+      }
+    }
+  </script>
 </body>
 </html>
+
