@@ -1,505 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Rash Football</title>
-
-<style>
-*{box-sizing:border-box;touch-action:none}
-body{
-    margin:0;
-    overflow:hidden;
-    background:#111;
-    font-family:Arial,sans-serif;
-}
-#game{
-    position:relative;
-    width:100vw;
-    height:100vh;
-    background:#16833a;
-    overflow:hidden;
-}
-
-#field{
-    position:absolute;
-    width:90vw;
-    height:80vh;
-    left:5vw;
-    top:10vh;
-    border:4px solid white;
-    background:
-      linear-gradient(90deg,
-      transparent 49.7%,
-      white 49.7%,
-      white 50.3%,
-      transparent 50.3%);
-}
-
-#field:after{
-    content:"";
-    position:absolute;
-    width:20%;
-    height:30%;
-    border:3px solid white;
-    left:40%;
-    top:35%;
-    border-radius:50%;
-}
-
-.player,.enemy,.ball{
-    position:absolute;
-    transform:translate(-50%,-50%);
-    border-radius:50%;
-}
-
-.player{
-    width:42px;
-    height:42px;
-    background:#1769ff;
-    border:3px solid white;
-    z-index:5;
-}
-
-.enemy{
-    width:40px;
-    height:40px;
-    background:#e22;
-    border:3px solid white;
-    z-index:4;
-}
-
-.ball{
-    width:18px;
-    height:18px;
-    background:white;
-    border:2px solid #111;
-    z-index:6;
-}
-
-#score{
-    position:absolute;
-    top:15px;
-    left:50%;
-    transform:translateX(-50%);
-    color:white;
-    font-size:25px;
-    font-weight:bold;
-    z-index:20;
-}
-
-#timer{
-    position:absolute;
-    top:50px;
-    left:50%;
-    transform:translateX(-50%);
-    color:white;
-    font-size:18px;
-    z-index:20;
-}
-
-#joystick{
-    position:absolute;
-    left:25px;
-    bottom:25px;
-    width:125px;
-    height:125px;
-    border-radius:50%;
-    background:rgba(255,255,255,.2);
-    border:2px solid rgba(255,255,255,.6);
-}
-
-#stick{
-    position:absolute;
-    width:55px;
-    height:55px;
-    left:35px;
-    top:35px;
-    border-radius:50%;
-    background:rgba(255,255,255,.7);
-}
-
-.buttons{
-    position:absolute;
-    right:20px;
-    bottom:25px;
-    display:flex;
-    gap:12px;
-}
-
-button{
-    width:75px;
-    height:75px;
-    border-radius:50%;
-    border:3px solid white;
-    color:white;
-    font-weight:bold;
-    background:rgba(0,0,0,.45);
-}
-
-button:active{
-    background:rgba(255,255,255,.4);
-}
-
-#message{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    color:white;
-    font-size:35px;
-    font-weight:bold;
-    display:none;
-    z-index:50;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docdove18 | Live Chat, Voice & Camera</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; text-align: center; }
+    #chat-box { width: 100%; max-width: 500px; height: 350px; border: 1px solid #ccc; background: #fff; margin: 20px auto; overflow-y: scroll; padding: 10px; text-align: left; }
+    .input-area { display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
+    .btn-group { display: flex; gap: 5px; }
+    input[type="text"] { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+    button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1; }
+    button.recording { background: #dc3545; }
+    .file-input { display: none; }
+    label.btn-label { padding: 10px; background: #28a745; color: white; border-radius: 4px; cursor: pointer; flex: 1; text-align: center; font-size: 14px; }
+  </style>
 </head>
-
 <body>
 
-<div id="game">
+  <h2>Docdove18 Live Community Chat</h2>
+  
+  <div id="chat-box">
+    <p><i>Messages will appear here...</i></p>
+  </div>
 
-    <div id="field"></div>
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    
+    <div class="btn-group">
+      <!-- Camera capture button -->
+      <label for="cameraInput" class="btn-label">📷 Camera</label>
+      <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="environment">
 
-    <div id="score">BLUE 0 - 0 RED</div>
-    <div id="timer">90</div>
+      <!-- File upload button -->
+      <label for="imageInput" class="btn-label">📁 Gallery</label>
+      <input type="file" id="imageInput" class="file-input" accept="image/*">
 
-    <div id="message">GOAL!</div>
-
-    <div id="joystick">
-        <div id="stick"></div>
+      <!-- Voice note record button -->
+      <button id="recordBtn" type="button" onclick="toggleRecording()">🎙️ Record Voice</button>
     </div>
 
-    <div class="buttons">
-        <button id="pass">PASS</button>
-        <button id="shoot">SHOOT</button>
-        <button id="sprint">SPRINT</button>
-    </div>
+    <button onclick="sendMessage()" style="margin-top: 5px;">Send Message</button>
+  </div>
 
-    <div id="player" class="player"></div>
-    <div id="enemy" class="enemy"></div>
-    <div id="ball" class="ball"></div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-</div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD_M7Xg6TAIxHB3Vvp1",
+      authDomain: "rash-kajue-chat.firebaseapp.com",
+      projectId: "rash-kajue-chat",
+      storageBucket: "rash-kajue-chat.firebasestorage.app",
+      messagingSenderId: "859601059111",
+      appId: "1:859601059111:web:c4ea50"
+    };
 
-<script>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
-const player = document.getElementById("player");
-const enemy = document.getElementById("enemy");
-const ball = document.getElementById("ball");
-const scoreText = document.getElementById("score");
-const timerText = document.getElementById("timer");
-const joystick = document.getElementById("joystick");
-const stick = document.getElementById("stick");
-const message = document.getElementById("message");
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioBlob = null;
 
-let px = 45;
-let py = 50;
-
-let ex = 70;
-let ey = 50;
-
-let bx = 48;
-let by = 50;
-
-let blueScore = 0;
-let redScore = 0;
-
-let time = 90;
-
-let joyX = 0;
-let joyY = 0;
-
-let sprinting = false;
-let ballMoving = false;
-let ballVX = 0;
-let ballVY = 0;
-
-function render(){
-
-    player.style.left = px + "%";
-    player.style.top = py + "%";
-
-    enemy.style.left = ex + "%";
-    enemy.style.top = ey + "%";
-
-    ball.style.left = bx + "%";
-    ball.style.top = by + "%";
-
-    scoreText.textContent =
-        `BLUE ${blueScore} - ${redScore} RED`;
-
-}
-
-function distance(ax,ay,bx,by){
-    return Math.sqrt(
-        Math.pow(ax-bx,2)+
-        Math.pow(ay-by,2)
-    );
-}
-
-function update(){
-
-    let speed = sprinting ? 0.65 : 0.35;
-
-    px += joyX * speed;
-    py += joyY * speed;
-
-    px = Math.max(7,Math.min(93,px));
-    py = Math.max(8,Math.min(92,py));
-
-    /*
-     * Ball follows player when close.
-     */
-    if(!ballMoving){
-
-        if(distance(px,py,bx,by) < 7){
-            bx = px + joyX * 3;
-            by = py + joyY * 3;
+    // Toggle Voice Recording
+    window.toggleRecording = async function() {
+      const btn = document.getElementById("recordBtn");
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          };
+          mediaRecorder.start();
+          btn.innerText = "🛑 Stop Recording";
+          btn.classList.add("recording");
+        } catch (err) {
+          alert("Microphone access denied or not supported.");
         }
-    }
+      } else {
+        mediaRecorder.stop();
+        btn.innerText = "🎙️ Voice Ready (Click Send)";
+        btn.classList.remove("recording");
+      }
+    };
 
-    /*
-     * Ball physics
-     */
-    if(ballMoving){
-
-        bx += ballVX;
-        by += ballVY;
-
-        ballVX *= 0.97;
-        ballVY *= 0.97;
-
-        if(Math.abs(ballVX) < 0.01 &&
-           Math.abs(ballVY) < 0.01){
-
-            ballMoving = false;
+    // Listen for live messages
+    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+    onSnapshot(q, (snapshot) => {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const msgDiv = document.createElement("div");
+        msgDiv.style.marginBottom = "12px";
+        
+        let content = `<p style="margin: 2px 0;"><b>User:</b> ${data.text || ''}</p>`;
+        if (data.imageUrl) {
+          content += `<img src="${data.imageUrl}" style="max-width:200px; border-radius:5px;"><br>`;
         }
-    }
-
-    /*
-     * Enemy AI
-     */
-    let dx = bx - ex;
-    let dy = by - ey;
-
-    let d = Math.sqrt(dx*dx + dy*dy);
-
-    if(d > 0){
-
-        ex += (dx/d) * 0.12;
-        ey += (dy/d) * 0.12;
-    }
-
-    /*
-     * Enemy steals ball
-     */
-    if(distance(ex,ey,bx,by) < 5){
-
-        ballMoving = false;
-
-        bx = ex;
-        by = ey;
-    }
-
-    /*
-     * Goal detection
-     */
-    if(bx > 90){
-
-        blueScore++;
-
-        showGoal();
-
-        resetBall();
-    }
-
-    if(bx < 10){
-
-        redScore++;
-
-        showGoal();
-
-        resetBall();
-    }
-
-    render();
-
-    requestAnimationFrame(update);
-}
-
-function showGoal(){
-
-    message.style.display = "block";
-
-    setTimeout(()=>{
-        message.style.display = "none";
-    },1000);
-}
-
-function resetBall(){
-
-    bx = 50;
-    by = 50;
-
-    px = 45;
-    py = 50;
-
-    ex = 70;
-    ey = 50;
-
-    ballMoving = false;
-
-    render();
-}
-
-/*
- * JOYSTICK
- */
-
-let dragging = false;
-
-joystick.addEventListener("touchstart",e=>{
-    dragging = true;
-});
-
-joystick.addEventListener("touchmove",e=>{
-
-    if(!dragging)return;
-
-    const touch = e.touches[0];
-
-    const rect = joystick.getBoundingClientRect();
-
-    let x =
-        touch.clientX -
-        (rect.left + rect.width/2);
-
-    let y =
-        touch.clientY -
-        (rect.top + rect.height/2);
-
-    const max = 42;
-
-    let len = Math.sqrt(x*x+y*y);
-
-    if(len > max){
-
-        x = x/len*max;
-        y = y/len*max;
-    }
-
-    stick.style.left =
-        (35+x) + "px";
-
-    stick.style.top =
-        (35+y) + "px";
-
-    joyX = x/max;
-    joyY = y/max;
-
-});
-
-joystick.addEventListener("touchend",()=>{
-
-    dragging = false;
-
-    joyX = 0;
-    joyY = 0;
-
-    stick.style.left = "35px";
-    stick.style.top = "35px";
-});
-
-/*
- * PASS
- */
-
-document.getElementById("pass")
-.addEventListener("touchstart",()=>{
-
-    if(distance(px,py,bx,by) < 10){
-
-        ballMoving = true;
-
-        ballVX = joyX * 1.3;
-        ballVY = joyY * 1.3;
-
-        if(Math.abs(joyX)+Math.abs(joyY) < 0.1){
-
-            ballVX = 1;
-            ballVY = 0;
+        if (data.audioUrl) {
+          content += `<audio controls src="${data.audioUrl}"></audio><br>`;
         }
+        msgDiv.innerHTML = content;
+        chatBox.appendChild(msgDiv);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Send Message function
+    window.sendMessage = async function() {
+      const text = document.getElementById("messageInput").value;
+      const cameraFile = document.getElementById("cameraInput").files[0];
+      const galleryFile = document.getElementById("imageInput").files[0];
+      const fileInput = cameraFile || galleryFile;
+
+      let imageUrl = "";
+      let audioUrl = "";
+
+      // Upload image if selected
+      if (fileInput) {
+        const storageRef = ref(storage, 'chat_images/' + Date.now() + '_' + fileInput.name);
+        await uploadBytes(storageRef, fileInput);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      // Upload voice note if recorded
+      if (audioBlob) {
+        const audioRef = ref(storage, 'chat_audio/' + Date.now() + '_voice.webm');
+        await uploadBytes(audioRef, audioBlob);
+        audioUrl = await getDownloadURL(audioRef);
+        audioBlob = null;
+        document.getElementById("recordBtn").innerText = "🎙️ Record Voice";
+      }
+
+      if (text || imageUrl || audioUrl) {
+        await addDoc(collection(db, "messages"), {
+          text: text,
+          imageUrl: imageUrl,
+          audioUrl: audioUrl,
+          timestamp: new Date()
+        });
+        document.getElementById("messageInput").value = "";
+        document.getElementById("cameraInput").value = "";
+        document.getElementById("imageInput").value = "";
+      }
     }
-
-});
-
-/*
- * SHOOT
- */
-
-document.getElementById("shoot")
-.addEventListener("touchstart",()=>{
-
-    if(distance(px,py,bx,by) < 10){
-
-        ballMoving = true;
-
-        let direction =
-            joyX === 0 ? 1 : joyX;
-
-        ballVX = direction * 2.5;
-
-        ballVY = joyY * 2.5;
-    }
-
-});
-
-/*
- * SPRINT
- */
-
-const sprintButton =
-    document.getElementById("sprint");
-
-sprintButton.addEventListener(
-    "touchstart",
-    ()=>sprinting=true
-);
-
-sprintButton.addEventListener(
-    "touchend",
-    ()=>sprinting=false
-);
-
-/*
- * MATCH TIMER
- */
-
-setInterval(()=>{
-
-    if(time > 0){
-
-        time--;
-
-        timerText.textContent = time;
-
-    }else{
-
-        message.textContent =
-            `FULL TIME`;
-
-        message.style.display =
-            "block";
-    }
-
-},1000);
-
-render();
-update();
-
-</script>
-
+  </script>
 </body>
 </html>
