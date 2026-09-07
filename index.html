@@ -1,277 +1,505 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream Football Match</title>
-    <style>
-        body {
-            margin: 0;
-            background: #0b0f19;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
-        .hud {
-            display: flex;
-            justify-content: space-between;
-            width: 360px;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .timer {
-            color: #b9ec0c;
-        }
-        canvas {
-            background: linear-gradient(to bottom, #1e5631, #2e8b57);
-            border: 4px solid #fff;
-            border-radius: 8px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            touch-action: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Rash Football</title>
+
+<style>
+*{box-sizing:border-box;touch-action:none}
+body{
+    margin:0;
+    overflow:hidden;
+    background:#111;
+    font-family:Arial,sans-serif;
+}
+#game{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    background:#16833a;
+    overflow:hidden;
+}
+
+#field{
+    position:absolute;
+    width:90vw;
+    height:80vh;
+    left:5vw;
+    top:10vh;
+    border:4px solid white;
+    background:
+      linear-gradient(90deg,
+      transparent 49.7%,
+      white 49.7%,
+      white 50.3%,
+      transparent 50.3%);
+}
+
+#field:after{
+    content:"";
+    position:absolute;
+    width:20%;
+    height:30%;
+    border:3px solid white;
+    left:40%;
+    top:35%;
+    border-radius:50%;
+}
+
+.player,.enemy,.ball{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+}
+
+.player{
+    width:42px;
+    height:42px;
+    background:#1769ff;
+    border:3px solid white;
+    z-index:5;
+}
+
+.enemy{
+    width:40px;
+    height:40px;
+    background:#e22;
+    border:3px solid white;
+    z-index:4;
+}
+
+.ball{
+    width:18px;
+    height:18px;
+    background:white;
+    border:2px solid #111;
+    z-index:6;
+}
+
+#score{
+    position:absolute;
+    top:15px;
+    left:50%;
+    transform:translateX(-50%);
+    color:white;
+    font-size:25px;
+    font-weight:bold;
+    z-index:20;
+}
+
+#timer{
+    position:absolute;
+    top:50px;
+    left:50%;
+    transform:translateX(-50%);
+    color:white;
+    font-size:18px;
+    z-index:20;
+}
+
+#joystick{
+    position:absolute;
+    left:25px;
+    bottom:25px;
+    width:125px;
+    height:125px;
+    border-radius:50%;
+    background:rgba(255,255,255,.2);
+    border:2px solid rgba(255,255,255,.6);
+}
+
+#stick{
+    position:absolute;
+    width:55px;
+    height:55px;
+    left:35px;
+    top:35px;
+    border-radius:50%;
+    background:rgba(255,255,255,.7);
+}
+
+.buttons{
+    position:absolute;
+    right:20px;
+    bottom:25px;
+    display:flex;
+    gap:12px;
+}
+
+button{
+    width:75px;
+    height:75px;
+    border-radius:50%;
+    border:3px solid white;
+    color:white;
+    font-weight:bold;
+    background:rgba(0,0,0,.45);
+}
+
+button:active{
+    background:rgba(255,255,255,.4);
+}
+
+#message{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    color:white;
+    font-size:35px;
+    font-weight:bold;
+    display:none;
+    z-index:50;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="hud">
-        <div><span id="team1Name">Haaland/Yamal</span>: <span id="playerScore">0</span></div>
-        <div class="timer">⏱ <span id="matchTimer">90</span>s</div>
-        <div><span id="team2Name">Mbappé/Raya</span>: <span id="aiScore">0</span></div>
+<div id="game">
+
+    <div id="field"></div>
+
+    <div id="score">BLUE 0 - 0 RED</div>
+    <div id="timer">90</div>
+
+    <div id="message">GOAL!</div>
+
+    <div id="joystick">
+        <div id="stick"></div>
     </div>
-    
-    <canvas id="gameCanvas" width="360" height="520"></canvas>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+    <div class="buttons">
+        <button id="pass">PASS</button>
+        <button id="shoot">SHOOT</button>
+        <button id="sprint">SPRINT</button>
+    </div>
 
-        let playerScore = 0;
-        let aiScore = 0;
-        let timeLeft = 90;
-        let gameActive = true;
-        let celebrationText = "";
-        let celebrationTimer = 0;
+    <div id="player" class="player"></div>
+    <div id="enemy" class="enemy"></div>
+    <div id="ball" class="ball"></div>
 
-        const ball = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 8,
-            speed: 4.5,
-            velocityX: 2.5,
-            velocityY: 4
-        };
+</div>
 
-        // User Team Players (Controlled by Touch/Mouse)
-        const playerStriker = {
-            name: "Haaland",
-            x: canvas.width / 2 - 25,
-            y: canvas.height - 70,
-            width: 50,
-            height: 14,
-            color: "#b9ec0c"
-        };
+<script>
 
-        const playerWinger = {
-            name: "Yamal",
-            x: 60,
-            y: canvas.height - 140,
-            width: 40,
-            height: 12,
-            color: "#ffffff"
-        };
+const player = document.getElementById("player");
+const enemy = document.getElementById("enemy");
+const ball = document.getElementById("ball");
+const scoreText = document.getElementById("score");
+const timerText = document.getElementById("timer");
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
+const message = document.getElementById("message");
 
-        // Opponent Team Players (AI Controlled)
-        const aiDefender = {
-            name: "Mbappé",
-            x: canvas.width / 2 - 25,
-            y: 70,
-            width: 50,
-            height: 14,
-            color: "#14e453"
-        };
+let px = 45;
+let py = 50;
 
-        const aiGoalie = {
-            name: "Raya",
-            x: canvas.width / 2 - 30,
-            y: 25,
-            width: 60,
-            height: 10,
-            color: "#ffcc00"
-        };
+let ex = 70;
+let ey = 50;
 
-        // Match Timer
-        const timerInterval = setInterval(() => {
-            if (gameActive && timeLeft > 0) {
-                timeLeft--;
-                document.getElementById("matchTimer").innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    gameActive = false;
-                    celebrationText = playerScore > aiScore ? "FULL TIME: YOU WIN!" : (playerScore < aiScore ? "FULL TIME: AI WINS!" : "FULL TIME: DRAW!");
-                }
-            }
-        }, 1000);
+let bx = 48;
+let by = 50;
 
-        // Touch & Mouse Movement Controls
-        function handleMove(clientX) {
-            let rect = canvas.getBoundingClientRect();
-            let mouseX = clientX - rect.left;
-            playerStriker.x = mouseX - playerStriker.width / 2;
-            if (playerStriker.x < 0) playerStriker.x = 0;
-            if (playerStriker.x + playerStriker.width > canvas.width) playerStriker.x = canvas.width - playerStriker.width;
+let blueScore = 0;
+let redScore = 0;
+
+let time = 90;
+
+let joyX = 0;
+let joyY = 0;
+
+let sprinting = false;
+let ballMoving = false;
+let ballVX = 0;
+let ballVY = 0;
+
+function render(){
+
+    player.style.left = px + "%";
+    player.style.top = py + "%";
+
+    enemy.style.left = ex + "%";
+    enemy.style.top = ey + "%";
+
+    ball.style.left = bx + "%";
+    ball.style.top = by + "%";
+
+    scoreText.textContent =
+        `BLUE ${blueScore} - ${redScore} RED`;
+
+}
+
+function distance(ax,ay,bx,by){
+    return Math.sqrt(
+        Math.pow(ax-bx,2)+
+        Math.pow(ay-by,2)
+    );
+}
+
+function update(){
+
+    let speed = sprinting ? 0.65 : 0.35;
+
+    px += joyX * speed;
+    py += joyY * speed;
+
+    px = Math.max(7,Math.min(93,px));
+    py = Math.max(8,Math.min(92,py));
+
+    /*
+     * Ball follows player when close.
+     */
+    if(!ballMoving){
+
+        if(distance(px,py,bx,by) < 7){
+            bx = px + joyX * 3;
+            by = py + joyY * 3;
         }
+    }
 
-        canvas.addEventListener("touchmove", (e) => handleMove(e.touches[0].clientX));
-        canvas.addEventListener("mousemove", (e) => handleMove(e.clientX));
+    /*
+     * Ball physics
+     */
+    if(ballMoving){
 
-        function resetBall(scorer) {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.velocityX = (Math.random() > 0.5 ? 1 : -1) * 3;
-            ball.velocityY = (scorer === 'player' ? -1 : 1) * 4;
-            celebrationTimer = 45;
+        bx += ballVX;
+        by += ballVY;
+
+        ballVX *= 0.97;
+        ballVY *= 0.97;
+
+        if(Math.abs(ballVX) < 0.01 &&
+           Math.abs(ballVY) < 0.01){
+
+            ballMoving = false;
         }
+    }
 
-        function update() {
-            if (!gameActive) return;
+    /*
+     * Enemy AI
+     */
+    let dx = bx - ex;
+    let dy = by - ey;
 
-            if (celebrationTimer > 0) {
-                celebrationTimer--;
-                return;
-            }
+    let d = Math.sqrt(dx*dx + dy*dy);
 
-            ball.x += ball.velocityX;
-            ball.y += ball.velocityY;
+    if(d > 0){
 
-            // AI tracking logic for Mbappé & Raya
-            let aiCenter = aiDefender.x + aiDefender.width / 2;
-            if (aiCenter < ball.x - 5) aiDefender.x += 3;
-            else if (aiCenter > ball.x + 5) aiDefender.x -= 3;
-            if (aiDefender.x < 0) aiDefender.x = 0;
-            if (aiDefender.x + aiDefender.width > canvas.width) aiDefender.x = canvas.width - aiDefender.width;
+        ex += (dx/d) * 0.12;
+        ey += (dy/d) * 0.12;
+    }
 
-            // Goalie simple tracking
-            let goalieCenter = aiGoalie.x + aiGoalie.width / 2;
-            if (goalieCenter < ball.x) aiGoalie.x += 2;
-            else if (goalieCenter > ball.x) aiGoalie.x -= 2;
+    /*
+     * Enemy steals ball
+     */
+    if(distance(ex,ey,bx,by) < 5){
 
-            // Winger autonomous movement
-            playerWinger.x += Math.sin(Date.now() / 300) * 2;
+        ballMoving = false;
 
-            // Wall bounces
-            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
-                ball.velocityX = -ball.velocityX;
-            }
+        bx = ex;
+        by = ey;
+    }
 
-            // Goal detection
-            if (ball.y < 20) {
-                playerScore++;
-                document.getElementById("playerScore").innerText = playerScore;
-                celebrations("GOAL! HAALAND SCORES!");
-                resetBall('player');
-            } else if (ball.y > canvas.height - 20) {
-                aiScore++;
-                document.getElementById("aiScore").innerText = aiScore;
-                celebrations("MBAPPÉ SCORES!");
-                resetBall('ai');
-            }
+    /*
+     * Goal detection
+     */
+    if(bx > 90){
 
-            // Paddle / Player Collisions
-            checkCollision(playerStriker);
-            checkCollision(playerWinger);
-            checkCollision(aiDefender);
-            checkCollision(aiGoalie);
+        blueScore++;
+
+        showGoal();
+
+        resetBall();
+    }
+
+    if(bx < 10){
+
+        redScore++;
+
+        showGoal();
+
+        resetBall();
+    }
+
+    render();
+
+    requestAnimationFrame(update);
+}
+
+function showGoal(){
+
+    message.style.display = "block";
+
+    setTimeout(()=>{
+        message.style.display = "none";
+    },1000);
+}
+
+function resetBall(){
+
+    bx = 50;
+    by = 50;
+
+    px = 45;
+    py = 50;
+
+    ex = 70;
+    ey = 50;
+
+    ballMoving = false;
+
+    render();
+}
+
+/*
+ * JOYSTICK
+ */
+
+let dragging = false;
+
+joystick.addEventListener("touchstart",e=>{
+    dragging = true;
+});
+
+joystick.addEventListener("touchmove",e=>{
+
+    if(!dragging)return;
+
+    const touch = e.touches[0];
+
+    const rect = joystick.getBoundingClientRect();
+
+    let x =
+        touch.clientX -
+        (rect.left + rect.width/2);
+
+    let y =
+        touch.clientY -
+        (rect.top + rect.height/2);
+
+    const max = 42;
+
+    let len = Math.sqrt(x*x+y*y);
+
+    if(len > max){
+
+        x = x/len*max;
+        y = y/len*max;
+    }
+
+    stick.style.left =
+        (35+x) + "px";
+
+    stick.style.top =
+        (35+y) + "px";
+
+    joyX = x/max;
+    joyY = y/max;
+
+});
+
+joystick.addEventListener("touchend",()=>{
+
+    dragging = false;
+
+    joyX = 0;
+    joyY = 0;
+
+    stick.style.left = "35px";
+    stick.style.top = "35px";
+});
+
+/*
+ * PASS
+ */
+
+document.getElementById("pass")
+.addEventListener("touchstart",()=>{
+
+    if(distance(px,py,bx,by) < 10){
+
+        ballMoving = true;
+
+        ballVX = joyX * 1.3;
+        ballVY = joyY * 1.3;
+
+        if(Math.abs(joyX)+Math.abs(joyY) < 0.1){
+
+            ballVX = 1;
+            ballVY = 0;
         }
+    }
 
-        function celebrations(text) {
-            celebrationText = text;
-        }
+});
 
-        function checkCollision(p) {
-            if (
-                ball.x > p.x &&
-                ball.x < p.x + p.width &&
-                ball.y + ball.radius > p.y &&
-                ball.y - ball.radius < p.y + p.height
-            ) {
-                let collidePoint = ball.x - (p.x + p.width / 2);
-                let angleRad = (Math.PI / 3) * (collidePoint / (p.width / 2));
-                let direction = (ball.y > canvas.height / 2) ? -1 : 1;
-                ball.velocityX = ball.speed * Math.sin(angleRad);
-                ball.velocityY = direction * ball.speed * Math.cos(angleRad);
-            }
-        }
+/*
+ * SHOOT
+ */
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+document.getElementById("shoot")
+.addEventListener("touchstart",()=>{
 
-            // Pitch Markings
-            ctx.strokeStyle = "rgba(255,255,255,0.25)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
+    if(distance(px,py,bx,by) < 10){
 
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, 55, 0, Math.PI * 2);
-            ctx.stroke();
+        ballMoving = true;
 
-            // Goal Boxes
-            ctx.strokeRect(canvas.width / 2 - 80, 0, 160, 35);
-            ctx.strokeRect(canvas.width / 2 - 80, canvas.height - 35, 160, 35);
+        let direction =
+            joyX === 0 ? 1 : joyX;
 
-            // Draw Players with Names
-            drawPlayer(playerStriker);
-            drawPlayer(playerWinger);
-            drawPlayer(aiDefender);
-            drawPlayer(aiGoalie);
+        ballVX = direction * 2.5;
 
-            // Draw Ball
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fill();
+        ballVY = joyY * 2.5;
+    }
 
-            // Overlay Text
-            if (celebrationTimer > 0 && gameActive) {
-                ctx.fillStyle = "#ffcc00";
-                ctx.font = "bold 22px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(celebrationText, canvas.width / 2, canvas.height / 2 + 8);
-            } else if (!gameActive) {
-                ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 26px sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(celebrationText, canvas.width / 2, canvas.height / 2);
-            }
-        }
+});
 
-        function drawPlayer(p) {
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, p.width, p.height);
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "10px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(p.name, p.x + p.width / 2, p.y - 4);
-        }
+/*
+ * SPRINT
+ */
 
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+const sprintButton =
+    document.getElementById("sprint");
 
-        gameLoop();
-    </script>
+sprintButton.addEventListener(
+    "touchstart",
+    ()=>sprinting=true
+);
+
+sprintButton.addEventListener(
+    "touchend",
+    ()=>sprinting=false
+);
+
+/*
+ * MATCH TIMER
+ */
+
+setInterval(()=>{
+
+    if(time > 0){
+
+        time--;
+
+        timerText.textContent = time;
+
+    }else{
+
+        message.textContent =
+            `FULL TIME`;
+
+        message.style.display =
+            "block";
+    }
+
+},1000);
+
+render();
+update();
+
+</script>
+
 </body>
 </html>
