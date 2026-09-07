@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rash - Kajue PWA</title>
+    <!-- Firebase App (Core) SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Realtime Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
         * { box-sizing: border-box; }
         body {
@@ -229,61 +234,50 @@
     </div>
 
     <script>
+        // TODO: Replace with your own Firebase project configuration keys
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('messages');
+
         const chatBox = document.getElementById("chatBox");
-        let messages = [];
 
-        function renderChat() {
-            chatBox.innerHTML = "";
-            messages.forEach((msg, index) => {
-                let row = document.createElement("div");
-                row.className = "message-row user-row";
-                
-                let bubble = document.createElement("div");
-                bubble.className = "message-bubble";
+        // Listen for live messages incoming from any device
+        dbRef.on('child_added', (snapshot) => {
+            let msg = snapshot.val();
+            let msgKey = snapshot.key;
+            appendMessageToUI(msg, msgKey);
+        });
 
-                if (msg.type === 'image') {
-                    let img = document.createElement("img");
-                    img.src = msg.content;
-                    bubble.appendChild(img);
-                } else if (msg.type === 'audio') {
-                    let audio = document.createElement("audio");
-                    audio.controls = true;
-                    audio.src = msg.content;
-                    bubble.appendChild(audio);
-                } else {
-                    let text = document.createElement("div");
-                    text.innerText = msg.content;
-                    bubble.appendChild(text);
-                }
-
-                let delBtn = document.createElement("button");
-                delBtn.className = "delete-btn";
-                delBtn.innerHTML = "✕";
-                delBtn.onclick = () => deleteMessage(index);
-                bubble.appendChild(delBtn);
-
-                row.appendChild(bubble);
-                chatBox.appendChild(row);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        // Listen for deleted messages across devices
+        dbRef.on('child_removed', (snapshot) => {
+            let msgKey = snapshot.key;
+            let element = document.getElementById("msg-" + msgKey);
+            if (element) element.remove();
+        });
 
         function sendMessage() {
             let input = document.getElementById("messageInput");
             let text = input.value.trim();
             if (!text) return;
-            messages.push({ type: 'text', content: text });
+
+            // Push to Firebase database instead of local array
+            dbRef.push({
+                type: 'text',
+                content: text,
+                timestamp: Date.now()
+            });
+
             input.value = "";
-            renderChat();
-        }
-
-        function deleteMessage(index) {
-            messages.splice(index, 1);
-            renderChat();
-        }
-
-        function triggerUpload() {
-            document.getElementById("fileInput").click();
         }
 
         function handleFile(event) {
@@ -291,16 +285,65 @@
             if (file) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    messages.push({ type: 'image', content: e.target.result });
-                    renderChat();
+                    dbRef.push({
+                        type: 'image',
+                        content: e.target.result,
+                        timestamp: Date.now()
+                    });
                 };
                 reader.readAsDataURL(file);
             }
         }
 
         function sendVoiceNote() {
-            messages.push({ type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' });
-            renderChat();
+            dbRef.push({
+                type: 'audio',
+                content: 'https://www.w3schools.com/html/horse.mp3',
+                timestamp: Date.now()
+            });
+        }
+
+        function appendMessageToUI(msg, key) {
+            let row = document.createElement("div");
+            row.className = "message-row user-row";
+            row.id = "msg-" + key;
+            
+            let bubble = document.createElement("div");
+            bubble.className = "message-bubble";
+
+            if (msg.type === 'image') {
+                let img = document.createElement("img");
+                img.src = msg.content;
+                bubble.appendChild(img);
+            } else if (msg.type === 'audio') {
+                let audio = document.createElement("audio");
+                audio.controls = true;
+                audio.src = msg.content;
+                bubble.appendChild(audio);
+            } else {
+                let text = document.createElement("div");
+                text.innerText = msg.content;
+                bubble.appendChild(text);
+            }
+
+            let delBtn = document.createElement("button");
+            delBtn.className = "delete-btn";
+            delBtn.innerHTML = "✕";
+            delBtn.onclick = () => deleteMessage(key);
+            bubble.appendChild(delBtn);
+
+            row.appendChild(bubble);
+            chatBox.appendChild(row);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function deleteMessage(key) {
+            // Removes message globally from Firebase database
+            firebase.database().ref('messages/' + key).remove();
+        }
+
+        function triggerUpload() {
+            document.getElementById("fileInput").click();
         }
 
         function startCall() {
@@ -325,5 +368,4 @@
         }
     </script>
 </body>
-                </html>
-                
+</html>
