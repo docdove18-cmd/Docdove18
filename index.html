@@ -32,61 +32,7 @@
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-    // YOUR ACTUAL FIREBASE CONFIG
-    const firebaseConfig = {
-      apiKey: "AIzaSyD_M7Xg6TAIxHB3Vvp1",
-      authDomain: "rash-kajue-chat.firebaseapp.com",
-      projectId: "rash-kajue-chat",
-      storageBucket: "rash-kajue-chat.firebasestorage.app",
-      messagingSenderId: "859601059111",
-      appId: "1:859601059111:web:c4ea50"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    // Listen for live messages
-    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
-    onSnapshot(q, (snapshot) => {
-      const chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML = "";
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const msgDiv = document.createElement("div");
-        msgDiv.style.marginBottom = "10px";
-        
-        let content = `<p><b>User:</b> ${data.text || ''}</p>`;
-        if (data.imageUrl) {
-          content += `<img src="${data.imageUrl}" style="max-width:200px; border-radius:5px;"><br>`;
-        }
-        msgDiv.innerHTML = content;
-        chatBox.appendChild(msgDiv);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    // Send function
-    window.sendMessage = async function() {
-      const text = document.getElementById("messageInput").value;
-      const fileInput = document.getElementById("imageInput").files[0];
-      let imageUrl = "";
-
-      if (fileInput) {
-        const storageRef = ref(storage, 'chat_images/' + fileInput.name);
-        await uploadBytes(storageRef, fileInput);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
-      if (text || imageUrl) {
-        await addDoc(collection(db, "messages"), {
-          text: text,
-          imageUrl: imageUrl,
-          timestamp: new Date()
-        });
-        document.getElementById("messageInput").value = "";
-        document.getElementById("imageInput").value = "";
+    // YOUR ACTUAL FIREBASE CONFI
       }
     }
   </script>
