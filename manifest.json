@@ -1,12 +1,12 @@
-{
-  "background_color": "#ffffff",
+"background_color": "#14e453",
   "dir": "ltr",
   "display": "standalone",
-  "name": "Docdove18 Chat",
+  "name": "Rash",
   "orientation": "any",
   "scope": "/",
-  "short_name": "Docdove18",
+  "short_name": "Kajue",
   "start_url": "/",
-  "theme_color": "#007bff",
-  "id": "/"
+  "theme_color": "#b9ec0c",
+  "id": "/",
+  "description": "A live community chat app with video calls and media sharing"
 }
