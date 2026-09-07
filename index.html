@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rash Chat</title>
+    <title>Rash - Kajue PWA</title>
     <style>
         body {
             margin: 0;
@@ -13,22 +13,47 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
         }
-        .chat-header {
+        .app-header {
             background: #202c33;
             padding: 12px 16px;
             font-size: 18px;
             font-weight: bold;
             border-bottom: 1px solid #2a3942;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .header-actions button {
+            background: #00a884;
+            border: none;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #0b141a;
+            position: relative;
         }
         .chat-container {
             flex: 1;
-            padding: 16px;
+            padding: 12px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background-color: #0b141a;
         }
         .message-row {
             display: flex;
@@ -55,7 +80,7 @@
             position: absolute;
             top: 4px;
             right: 6px;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.5);
             border: none;
             color: #fff;
             border-radius: 50%;
@@ -63,12 +88,27 @@
             height: 20px;
             font-size: 10px;
             cursor: pointer;
-            display: none;
-        }
-        .message-bubble:hover .delete-btn {
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .media-bar {
+            background: #202c33;
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #2a3942;
+            overflow-x: auto;
+        }
+        .media-btn {
+            background: #2a3942;
+            border: none;
+            color: #e9edef;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
         }
         .chat-input-area {
             background: #202c33;
@@ -96,19 +136,98 @@
             font-weight: bold;
             cursor: pointer;
         }
+        /* Settings Modal Panel */
+        #settingsModal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #121b22;
+            z-index: 50;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .settings-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3942;
+            padding-bottom: 10px;
+        }
+        .settings-group {
+            margin-bottom: 16px;
+        }
+        .settings-group label {
+            display: block;
+            font-size: 13px;
+            color: #00a884;
+            margin-bottom: 6px;
+        }
+        .settings-group input, .settings-group select {
+            width: 100%;
+            background: #2a3942;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="chat-header">Rash Live Chat</div>
-
-    <div class="chat-container" id="chatBox">
-        <!-- Messages will appear here -->
+    <div class="app-header">
+        <span id="appTitle">Rash / Kajue Chat</span>
+        <div class="header-actions">
+            <button onclick="startCall()">📞 Call</button>
+            <button onclick="toggleSettings()">⚙️ Settings</button>
+        </div>
     </div>
 
-    <div class="chat-input-area">
-        <input type="text" id="messageInput" placeholder="Type a message or image link...">
-        <button onclick="sendMessage()">Send</button>
+    <div class="main-container">
+        <div class="chat-container" id="chatBox"></div>
+
+        <div class="media-bar">
+            <button class="media-btn" onclick="triggerUpload()">📷 Camera / Gallery</button>
+            <button class="media-btn" onclick="sendVoiceNote()">🎤 Voice Note</button>
+            <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleFile(event)">
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+        <!-- Settings Modal View -->
+        <div id="settingsModal">
+            <div class="settings-header">
+                <span>App Settings</span>
+                <button onclick="toggleSettings()" style="background:#2a3942; border:none; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer;">Close</button>
+            </div>
+            <div class="settings-group">
+                <label>Profile Name</label>
+                <input type="text" id="setNameInput" value="Rash">
+            </div>
+            <div class="settings-group">
+                <label>Theme Accent Color</label>
+                <select id="setThemeColor">
+                    <option value="#00a884">WhatsApp Green</option>
+                    <option value="#b9ec0c">Lime Accent</option>
+                    <option value="#14e453">Neon Green</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label>Notifications</label>
+                <select id="setNotifications">
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <button onclick="saveSettings()" style="width:100%; background:#00a884; border:none; color:#fff; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Save Changes</button>
+        </div>
     </div>
 
     <script>
@@ -128,13 +247,17 @@
                     let img = document.createElement("img");
                     img.src = msg.content;
                     bubble.appendChild(img);
+                } else if (msg.type === 'audio') {
+                    let audio = document.createElement("audio");
+                    audio.controls = true;
+                    audio.src = msg.content;
+                    bubble.appendChild(audio);
                 } else {
                     let text = document.createElement("div");
                     text.innerText = msg.content;
                     bubble.appendChild(text);
                 }
 
-                // WhatsApp style delete button on hover/tap
                 let delBtn = document.createElement("button");
                 delBtn.className = "delete-btn";
                 delBtn.innerHTML = "✕";
@@ -151,14 +274,7 @@
             let input = document.getElementById("messageInput");
             let text = input.value.trim();
             if (!text) return;
-
-            // Check if text is an image link, else regular text
-            if (text.startsWith("http") && (text.includes(".jpg") || text.includes(".png") || text.includes(".webp"))) {
-                messages.push({ type: 'image', content: text });
-            } else {
-                messages.push({ type: 'text', content: text });
-            }
-
+            messages.push({ type: 'text', content: text });
             input.value = "";
             renderChat();
         }
@@ -166,6 +282,48 @@
         function deleteMessage(index) {
             messages.splice(index, 1);
             renderChat();
+        }
+
+        function triggerUpload() {
+            document.getElementById("fileInput").click();
+        }
+
+        function handleFile(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    messages.push({ type: 'image', content: e.target.result });
+                    renderChat();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function sendVoiceNote() {
+            messages.push({ type: 'audio', content: 'https://www.w3schools.com/html/horse.mp3' });
+            renderChat();
+        }
+
+        function startCall() {
+            alert("Connecting audio call...");
+        }
+
+        function toggleSettings() {
+            let modal = document.getElementById("settingsModal");
+            modal.style.display = modal.style.display === "block" ? "none" : "block";
+        }
+
+        function saveSettings() {
+            let newName = document.getElementById("setNameInput").value;
+            let newColor = document.getElementById("setThemeColor").value;
+            
+            document.getElementById("appTitle").innerText = newName + " Chat";
+            document.querySelectorAll(".chat-input-area button, .header-actions button").forEach(btn => {
+                btn.style.background = newColor;
+            });
+            
+            toggleSettings();
         }
     </script>
 </body>
