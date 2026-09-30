@@ -1,113 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rash Kajue AI Lip Sync Generator</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        header {
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1e293b;
-        }
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #38bdf8;
-        }
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px 20px;
-        }
-        h1 {
-            font-size: 3rem;
-            max-width: 800px;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        p {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            max-width: 600px;
-            margin-bottom: 30px;
-        }
-        .cta-btn {
-            background: #38bdf8;
-            color: #0f172a;
-            padding: 15px 35px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.3s ease;
-            text-decoration: none;
-        }
-        .cta-btn:hover {
-            background: #0ea5e9;
-            transform: translateY(-2px);
-        }
-        .upload-section {
-            margin-top: 40px;
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            border: 2px dashed #475569;
-            width: 100%;
-            max-width: 500px;
-        }
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #64748b;
-            border-top: 1px solid #1e293b;
-        }
-    </style>
-</head>
-<body>
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">  
+<meta name="theme-color" content="#07131f">  
+<title>RASHKAJUE Free Lip Sync AI</title>  
+<style>  
+*{box-sizing:border-box}body{margin:0;background:#07131f;color:#fff;font-family:Arial,sans-serif}  
+.app{max-width:520px;margin:auto;min-height:100vh;padding:28px 18px 35px}  
+.logo{font-size:30px;font-weight:800;letter-spacing:1px}.sub{color:#8fa6b8;margin:5px 0 28px}  
+.card{background:#0d2030;border:1px solid #18364b;border-radius:20px;padding:18px;margin:14px 0}  
+h2{margin:0 0 8px;font-size:21px}.muted{color:#91a9ba;font-size:14px;line-height:1.5}  
+.btn{width:100%;border:0;border-radius:14px;padding:15px;margin-top:12px;font-size:16px;font-weight:700;cursor:pointer}  
+.primary{background:#19c37d;color:#04140d}.secondary{background:#15334a;color:#fff}  
+input[type=file]{display:none}.filebox{display:block;border:1px dashed #2d5872;border-radius:14px;padding:18px;text-align:center;margin-top:12px;color:#c8d8e3;cursor:pointer}  
+.preview{width:100%;max-height:290px;object-fit:contain;border-radius:14px;margin-top:14px;background:#061018;display:none}  
+.status{margin-top:14px;color:#9fd9c0;font-size:14px;min-height:20px}  
+.small{font-size:12px;color:#718b9d;margin-top:20px;text-align:center}  
+</style>  
+</head>  
+<body>  
+<div class="app">  
+  <div class="logo">RASHKAJUE</div>  
+  <div class="sub">FREE LIP SYNC AI</div>    <div class="card">  
+    <h2>🎬 Create Lip Sync</h2>  
+    <div class="muted">Choose a photo or video, then add the voice/audio you want to synchronize.</div>  <label class="filebox" for="media">📸 Select Photo / Video</label>  
+<input id="media" type="file" accept="image/*,video/*">  
 
-    <header>
-        <div class="logo">Rash Kajue AI</div>
-    </header>
+<label class="filebox" for="audio">🎵 Select Audio</label>  
+<input id="audio" type="file" accept="audio/*">  
 
-    <main>
-        <h1>Free AI Lip Sync Generator Online</h1>
-        <p>Start instantly and generate for free. Make photos and videos speak or sing with realistic AI lip sync — the best-value tool for creators.</p>
-        
-        <a href="#generator" class="cta-btn">Start Generating Free</a>
+<img id="imgPreview" class="preview">  
+<video id="videoPreview" class="preview" controls></video>  
 
-        <div class="upload-section" id="generator">
-            <h3>Upload Media & Audio</h3>
-            <p style="font-size: 0.9rem; margin: 15px 0;">Drop your photo/video and audio file here to begin.</p>
-            <button class="cta-btn" style="padding: 10px 20px; font-size: 1rem;">Browse Files</button>
-        </div>
-    </main>
+<button class="btn primary" id="generate">Generate Lip Sync</button>  
+<div class="status" id="status"></div>
 
-    <footer>
-        &copy; 2026 Rash Kajue AI. All rights reserved.
-    </footer>
-
-</body>
-</html>
+  </div>    <div class="card">  
+    <h2>📁 My Projects</h2>  
+    <div class="muted">Your future generated videos will appear here.</div>  
+    <button class="btn secondary" onclick="alert('Projects will be enabled in the next version.')">Open Projects</button>  
+  </div>    <div class="card">  
+    <h2>⚙️ Settings</h2>  
+    <div class="muted">Version 1.0 prototype • Mobile-first</div>  
+  </div>    <div class="small">RASHKAJUE AI • Built for Android</div>  
+</div>  <script>  
+const media=document.getElementById('media');  
+const audio=document.getElementById('audio');  
+const img=document.getElementById('imgPreview');  
+const video=document.getElementById('videoPreview');  
+const status=document.getElementById('status');  
+  
+media.addEventListener('change',()=>{  
+  const f=media.files[0]; if(!f)return;  
+  const url=URL.createObjectURL(f);  
+  img.style.display='none'; video.style.display='none';  
+  if(f.type.startsWith('image/')){img.src=url;img.style.display='block'}  
+  else if(f.type.startsWith('video/')){video.src=url;video.style.display='block'}  
+  status.textContent='Media selected: '+f.name;  
+});  
+audio.addEventListener('change',()=>{  
+  const f=audio.files[0]; if(f) status.textContent='Audio selected: '+f.name;  
+});  
+document.getElementById('generate').addEventListener('click',()=>{  
+  if(!media.files[0]){status.textContent='Please select a photo or video first.';return}  
+  if(!audio.files[0]){status.textContent='Please select an audio file first.';return}  
+  status.textContent='Prototype ready. The AI lip-sync engine will be connected in the next version.';  
+});  
+</script>  </body>  
+</html>  
